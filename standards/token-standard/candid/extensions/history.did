@@ -1,0 +1,39 @@
+type EventDetail = variant {
+    Transfer : record {
+        from : principal;
+        to   : principal;
+    };
+    // DEX events
+    Deposit  : record {
+        to   : principal;
+    };
+    Withdraw : record {
+        from : principal;
+        to   : principal;
+    };
+};
+
+type Event = record {
+    timestamp : u64;
+    amount    : Nat;
+    fee       : Nat;
+    detail    : EventDetail;
+};
+
+type GetTransactionResult = variant {
+    None;
+    Some : Transaction;
+};
+
+type EventsConnection = record {
+    data            : vec Event;
+    next_canister_id: opt principal;
+};
+
+service : {
+    // Only exposed on the main canister.
+    get_transaction : (TransactionId) -> (GetTransactionResult);
+
+    // Should also be implemented on archive canisters.
+    events : (record { after: opt Nat; limit: u16 }) -> (EventsConnection);
+}

@@ -1,0 +1,52 @@
+type DepositError = variant {
+    NotSufficientLiquidity;
+};
+
+type DepositResult = variant {
+    Ok : TransactionId;
+    Err: DepositError;
+};
+
+type WithdrawError = variant {
+    InsufficientBalance;
+    InvalidTokenContract;
+    NotSufficientLiquidity;
+};
+
+type LiquidityStats = record {
+    native : Nat;
+    cycles : Nat;
+};
+
+type WithdrawLiquidityResult = variant {
+    Ok;
+    InsufficientBalance;
+    InvalidTokenContract;
+};
+
+service : {
+    // The information regarding the amount of things in the liquidity poll.
+    liquidity_poll_stats : () -> (LiquidityStats);
+
+    // The caller should provide some cycles for this call, the cycles are converted to the token and added
+    // the caller's account or the provided account id.
+    deposit  : (opt principal) -> (DepositResult);
+
+    // Convert some token amount from caller to cycles and send the cycles to another token contract implementing
+    // the `deposit` method.
+    withdraw : (record { amount: Nat; token_contract_id: principal; }) -> (WithdrawResult);
+
+    // Caller provides a certain amount of cycles in exchange for the given amount of this token.
+    deposit_liquidity : (record { amount : Nat; }) -> bool;
+
+    // Withdraw some cycles from user's poll, sending them to another token contract, the caller needs to
+    // update the amount of tokens they want to be exchanged with the new cycle balance, the new_amount must
+    // be less than the current token balance in caller's poll.
+    withdraw_liquidity : (record { amount : u64; token_contract_id : principal; new_amount: Nat; }) -> (WithdrawLiquidityResult);
+
+    // Update the token amounts exchangeable with the user's provided cycles.
+    update_liquidity_rate : (record { new_amount : Nat; }) -> (bool);
+
+    // Return the poll stats of a certain account or the caller.
+    get_account_stats -> (opt principal) -> (LiquidityStats);
+}

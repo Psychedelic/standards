@@ -1,0 +1,15 @@
+// extends ../token.did
+
+type BurnErr = variant {
+    InsufficientBalance;
+    Unknown;
+};
+
+type BurnResult = variant {
+    Ok : ();
+    Err: BurnErr;
+};
+
+service : {
+    burn : (record { amount: Nat }) -> (BurnResult);
+}

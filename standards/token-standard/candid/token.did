@@ -1,0 +1,44 @@
+type TokenMetaData = record {
+    name    : text;
+    symbol  : text;
+    decimal : u8;
+    // List of the extensions this token implements.
+    features: vec text;
+};
+
+type TransactionId = Nat;
+
+type TransferError = variant {
+    InsufficientBalance;
+    AmountTooLarge;
+    CallFailed;
+    Unknown;
+};
+
+type TransferResult = variant {
+    Ok : TransactionId;
+    Err: TransferError;
+};
+
+type NotifyArgs = record {
+    canister_id: principal;
+    method_name: text;
+};
+
+service : {
+    // Return all of the meta data of a token.
+    meta : () -> (TokenMetaData) query;
+
+    // Return all of the meta data of a token as an update.
+    meta_certified : () -> (TokenMetaData);
+
+    // Returns the balance associated with an account, if the account is not provided, balance
+    // of the caller must be returned.
+    balance: (opt principal) -> (record { amount: Nat }) query;
+
+    // Transfer a certain amount of tokens from caller to the recipient.
+    // Notify argument is used if the caller wants to notify another canister of the transfer.
+    // The provided method on the canister will be called, see Notifiable Canisters candid, to
+    // see the method signature.
+    transfer: (record { to: principal; amount: Nat; notify: opt NotifyArgs }) -> TransferResult;
+}
